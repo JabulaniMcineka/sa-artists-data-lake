@@ -12,12 +12,17 @@ import requests
 import pandas as pd
 from googleapiclient.discovery import build
 
+
+from dotenv import load_dotenv
+from dotenv import load_dotenv
+from pathlib import Path
+
+load_dotenv(dotenv_path=Path("C:/Users/Jabulani.Mcineka/Downloads/sa_artists_data_lake/.env"))
 # ─────────────────────────────────────────
 # CONFIG
 # ─────────────────────────────────────────
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")
-LASTFM_API_KEY  = os.getenv("LASTFM_API_KEY")
-
+LASTFM_API_KEY = os.getenv("LASTFM_API_KEY")
 ARTISTS = [
     "Kabza De Small",
     "DJ Maphorisa",
@@ -70,7 +75,7 @@ def fetch_youtube_data(artist_name, channel_id, max_results=50):
                 "comment_count": int(stats.get("commentCount", 0)),
             })
     except Exception as e:
-        print(f"  ❌ YouTube error for {artist_name}: {e}")
+        print(f"  YouTube error for {artist_name}: {e}")
 
     return videos
 
@@ -101,7 +106,7 @@ def fetch_lastfm_artist(artist_name):
             "bio_summary":    data.get("bio", {}).get("summary", "")[:300],
         }
     except Exception as e:
-        print(f"  ❌ Last.fm error for {artist_name}: {e}")
+        print(f"   Last.fm error for {artist_name}: {e}")
         return None
 
 
@@ -126,7 +131,7 @@ def fetch_lastfm_top_tracks(artist_name, limit=10):
                 "rank":        int(track["@attr"]["rank"]),
             })
     except Exception as e:
-        print(f"  ❌ Last.fm tracks error for {artist_name}: {e}")
+        print(f"   Last.fm tracks error for {artist_name}: {e}")
     return tracks
 
 
@@ -163,7 +168,7 @@ def fetch_musicbrainz_artist(artist_name):
             "disambiguation": artist.get("disambiguation", ""),
         }
     except Exception as e:
-        print(f"  ❌ MusicBrainz error for {artist_name}: {e}")
+        print(f"  MusicBrainz error for {artist_name}: {e}")
         return None
 
     finally:
@@ -180,33 +185,33 @@ def fetch_all_data():
     musicbrainz_data = []
 
     for artist_name in ARTISTS:
-        print(f"\n🎵 Fetching: {artist_name}")
+        print(f"\n Fetching: {artist_name}")
 
         # YouTube
-        print("  📺 YouTube...")
+        print("   YouTube...")
         channel_id = YOUTUBE_CHANNEL_IDS.get(artist_name)
         if channel_id:
             videos = fetch_youtube_data(artist_name, channel_id)
             youtube_data.extend(videos)
-            print(f"     ✅ {len(videos)} videos")
+            print(f"     {len(videos)} videos")
 
         # Last.fm
-        print("  🎵 Last.fm...")
+        print("   Last.fm...")
         artist_info = fetch_lastfm_artist(artist_name)
         if artist_info:
             lastfm_artists.append(artist_info)
-            print(f"     ✅ {artist_info['listeners']:,} listeners")
+            print(f"      {artist_info['listeners']:,} listeners")
 
         tracks = fetch_lastfm_top_tracks(artist_name)
         lastfm_tracks.extend(tracks)
-        print(f"     ✅ {len(tracks)} top tracks")
+        print(f"  {len(tracks)} top tracks")
 
         # MusicBrainz
-        print("  🎼 MusicBrainz...")
+        print("  MusicBrainz...")
         mb_data = fetch_musicbrainz_artist(artist_name)
         if mb_data:
             musicbrainz_data.append(mb_data)
-            print(f"     ✅ Found: {mb_data['country']}, {mb_data['genres']}")
+            print(f" Found: {mb_data['country']}, {mb_data['genres']}")
 
     # Convert to DataFrames
     df_youtube     = pd.DataFrame(youtube_data)
@@ -218,17 +223,17 @@ def fetch_all_data():
 
 
 if __name__ == "__main__":
-    print("🚀 SA Artists Multi-Source Data Lake")
+    print(" SA Artists Multi-Source Data Lake")
     print("=====================================")
     df_yt, df_lf, df_tr, df_mb = fetch_all_data()
-    print(f"\n✅ YouTube videos:      {len(df_yt)}")
-    print(f"✅ Last.fm artists:     {len(df_lf)}")
-    print(f"✅ Last.fm top tracks:  {len(df_tr)}")
-    print(f"✅ MusicBrainz artists: {len(df_mb)}")
+    print(f"\n YouTube videos:      {len(df_yt)}")
+    print(f" Last.fm artists:     {len(df_lf)}")
+    print(f" Last.fm top tracks:  {len(df_tr)}")
+    print(f" MusicBrainz artists: {len(df_mb)}")
 
     # Save CSVs
     df_yt.to_csv("data/youtube_videos.csv", index=False)
     df_lf.to_csv("data/lastfm_artists.csv", index=False)
     df_tr.to_csv("data/lastfm_tracks.csv", index=False)
     df_mb.to_csv("data/musicbrainz_artists.csv", index=False)
-    print("\n✅ All data saved to data/ folder")
+    print("\n All data saved to data/ folder")
